@@ -1,0 +1,57 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  favicon: assets/images/fav-icon.png
+  title: "<code><span style='color: #8ecae6'>while</span>&nbsp;<span style='color: #ffb703'>my_mcmc:</span><br>&nbsp;&nbsp;gently(samples)</code>"
+  description: "Bayesian modeling & Data Science"
+  twitter-card:
+    creator: "@twiecki"
+  navbar:
+    left:
+      - text: "{{< fa rocket >}} Consulting"
+        href: https://www.pymc-labs.io/
+      - text: "{{< fa chart-simple >}} Intuitive Bayes"
+        href: https://www.intuitivebayes.com/
+      - text: "{{< fa microphone-lines >}} Podcast"
+        href: https://pydata-podcast.com/
+      - text: "{{< fa laptop-code >}} Blog"
+        href: blog.qmd
+      - text: "{{< fa person-chalkboard >}} Talks"
+        href: https://www.youtube.com/playlist?list=PL1Ma_1DBbE80Lf2GzqfUDSEgn5eRaaxEG
+    right:
+      - icon: github
+        href: https://github.com/twiecki
+      - icon: twitter
+        href: https://twitter.com/twiecki
+      - icon: linkedin
+        href: https://www.linkedin.com/in/thomas-wiecki-46339244/
+  page-footer:
+    background: primary
+    left: "{{< fa copyright >}} 2022, Thomas Wiecki"
+    center:
+      - text: "<code><span style='color: #c1fdff'>while</span>&nbsp;<span style='color: #ffe94e'>my_mcmc:</span><br>&nbsp;&nbsp;gently(samples)</code>"
+    right:
+      - icon: github
+        href: https://github.com/twiecki
+      - icon: twitter
+        href: https://twitter.com/twiecki
+      - icon: linkedin
+        href: https://www.linkedin.com/in/thomas-wiecki-46339244/
+format:
+  html:
+    theme:
+      light: [flatly, assets/css/custom.scss]
+      dark: [darkly, assets/css/custom-dark.scss]
+
+collections:
+  blog:
+    output: true
+    permalink: '/blog/{{ page.date | date: "%Y/%m/%d" }}/{{ page.filepath | slugify }}'
+
+routes:
+  - path: "/blog/bayesian-deep-learningsss"
+    source: "/blog/bayesian-deep-learning"
+
+freeze: true
