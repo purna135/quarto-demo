@@ -6,38 +6,14 @@ about:
 page-layout: full
 title-block-banner: true
 include-in-header: assets/templates/hero.html
-include-after-body: assets/templates/carousel.html
 listing:
   - id: listing-blog
     contents: blog
-    template: assets/templates/main-page.ejs
+    type: grid
+    grid-columns: 4
+    max-description-length: 100
+    page-size: 8
     sort: "date desc"
 
+# include-after-body: assets/templates/carousel.html
 ---
-
-::: {.grid .content-block}
-
-::: {.g-col-6}
-::: {.feature-top}
-### Blog
-Latest from the blog
-
-::: {#listing-blog}
-:::
-
-[Blog](blog.qmd){.btn .btn-secondary role="button"}
-:::
-:::
-
-::: {.g-col-6}
-::: {.feature-top}
-### Talks
-
-Latest talks I've done
-
-
-[Talks](https://www.youtube.com/playlist?list=PL1Ma_1DBbE80Lf2GzqfUDSEgn5eRaaxEGhttps://www.youtube.com/playlist?list=PL1Ma_1DBbE80Lf2GzqfUDSEgn5eRaaxEG){.btn .btn-secondary role="button"}
-:::
-:::
-
-:::
