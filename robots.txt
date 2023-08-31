@@ -1,1 +1,1 @@
-Sitemap: https://website-test.com/sitemap.xml
+Sitemap: https://github.com/purna135/quarto-demo/sitemap.xml
