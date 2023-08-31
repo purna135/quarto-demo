@@ -8,14 +8,14 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: 1.3.450
       - run: |
           quarto --version
 
