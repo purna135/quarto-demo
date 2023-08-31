@@ -25,4 +25,3 @@ jobs:
         uses: quarto-dev/quarto-actions/publish@v2
         with:
           target: gh-pages
-          cname: website-test.com
