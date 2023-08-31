@@ -48,3 +48,13 @@
     </div>
   </div>
 </div>
+<style>
+  .page-columns {
+    grid-template-columns: 
+      [screen-start] 5em 
+      [screen-start-inset page-start page-start-inset body-start-outset body-start body-content-start] minmax(10px, 20fr) 
+      [body-content-end body-end body-end-outset page-end-inset page-end screen-end-inset] 5em 
+      [screen-end] !important;
+  }
+  
+</style>

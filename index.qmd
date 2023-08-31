@@ -15,5 +15,5 @@ listing:
     page-size: 8
     sort: "date desc"
 
-# include-after-body: assets/templates/carousel.html
+include-after-body: assets/templates/carousel.html
 ---
