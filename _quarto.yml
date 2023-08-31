@@ -56,4 +56,5 @@ routes:
   - path: "/blog/bayesian-deep-learningsss"
     source: "/blog/bayesian-deep-learning"
 
-freeze: true
+execute:
+  freeze: true
