@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Thomas Wiecki">
+<meta name="dcterms.date" content="2015-11-10">
+
+<title>while&nbsp;my_mcmc:&nbsp;&nbsp;gently(samples) - MCMC sampling for dummies</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../assets/images/fav-icon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="twitter:title" content="while&nbsp;my_mcmc:&nbsp;&nbsp;gently(samples) - MCMC sampling for dummies">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="MCMC-sampling-for-dummies_files/figure-html/cell-4-output-1.png">
+<meta name="twitter:creator" content="@twiecki">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title"><code><span style="color: #8ecae6">while</span>&nbsp;<span style="color: #ffb703">my_mcmc:</span><br>&nbsp;&nbsp;gently(samples)</code></span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://www.pymc-labs.io/" rel="" target="">
+ <span class="menu-text"><i class="fa-solid fa-rocket" aria-label="rocket"></i> Consulting</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://www.intuitivebayes.com/" rel="" target="">
+ <span class="menu-text"><i class="fa-solid fa-chart-simple" aria-label="chart-simple"></i> Intuitive Bayes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://pydata-podcast.com/" rel="" target="">
+ <span class="menu-text"><i class="fa-solid fa-microphone-lines" aria-label="microphone-lines"></i> Podcast</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html" rel="" target="">
+ <span class="menu-text"><i class="fa-solid fa-laptop-code" aria-label="laptop-code"></i> Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://www.youtube.com/playlist?list=PL1Ma_1DBbE80Lf2GzqfUDSEgn5eRaaxEG" rel="" target="">
+ <span class="menu-text"><i class="fa-solid fa-person-chalkboard" aria-label="person-chalkboard"></i> Talks</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/twiecki" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/twiecki" rel="" target=""><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/thomas-wiecki-46339244/" rel="" target=""><i class="bi bi-linkedin" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">MCMC sampling for dummies</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">misc</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Thomas Wiecki </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">November 10, 2015</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<p>When I give talks about probabilistic programming and Bayesian statistics, I usually gloss over the details of how inference is actually performed, treating it as a black box essentially. The beauty of probabilistic programming is that you actually don’t <em>have</em> to understand how the inference works in order to build models, but it certainly helps.</p>
+<p>When I presented a new Bayesian model to <a href="https://quantopian.com">Quantopian’s</a> CEO, <a href="https://quantopian.com/about">Fawce</a>, who wasn’t trained in Bayesian stats but is eager to understand it, he started to ask about the part I usually gloss over: “Thomas, how does the inference actually work? How do we get these magical samples from the posterior?”.</p>
+<p>Now I could have said: “Well that’s easy, MCMC generates samples from the posterior distribution by constructing a reversible Markov-chain that has as its equilibrium distribution the target posterior distribution. Questions?”.</p>
+<p>That statement is correct, but is it useful? My pet peeve with how math and stats are taught is that no one ever tells you about the intuition behind the concepts (which is usually quite simple) but only hands you some scary math. This is certainly the way I was taught and I had to spend countless hours banging my head against the wall until that euraka moment came about. Usually things weren’t as scary or seemingly complex once I deciphered what it meant.</p>
+<p>This blog post is an attempt at trying to explain the <em>intuition</em> behind MCMC sampling (specifically, the <a href="https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm">random-walk Metropolis algorithm</a>). Critically, we’ll be using code examples rather than formulas or math-speak. Eventually you’ll need that but I personally think it’s better to start with the an example and build the intuition before you move on to the math.</p>
+<section id="the-problem-and-its-unintuitive-solution" class="level2">
+<h2 class="anchored" data-anchor-id="the-problem-and-its-unintuitive-solution">The problem and its unintuitive solution</h2>
+<p>Lets take a look at <a href="https://en.wikipedia.org/wiki/Bayes%27_theorem">Bayes formula</a>:</p>
+<p><span class="math display">\[P(\theta|x) = \frac{P(x|\theta) P(\theta)}{P(x)}\]</span></p>
+<p>We have <span class="math inline">\(P(\theta|x)\)</span>, the probability of our model parameters <span class="math inline">\(\theta\)</span> given the data <span class="math inline">\(x\)</span> and thus our quantity of interest. To compute this we multiply the prior <span class="math inline">\(P(\theta)\)</span> (what we think about <span class="math inline">\(\theta\)</span> before we have seen any data) and the likelihood <span class="math inline">\(P(x|\theta)\)</span>, i.e.&nbsp;how we think our data is distributed. This nominator is pretty easy to solve for.</p>
+<p>However, lets take a closer look at the denominator. <span class="math inline">\(P(x)\)</span> which is also called the evidence (i.e.&nbsp;the evidence that the data x was generated by this model). We can compute this quantity by integrating over all possible parameter values: <span class="math display">\[P(x) = \int_\Theta P(x, \theta) \, \mathrm{d}\theta\]</span></p>
+<p>This is the key difficulty with Bayes formula – while the formula looks innocent enough, for even slightly non-trivial models you just can’t compute the posterior in a closed-form way.</p>
+<p>Now we might say “OK, if we can’t solve something, could we try to approximate it? For example, if we could somehow draw samples from that posterior we can <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method">Monte Carlo approximate</a> it.” Unfortunately, to directly sample from that distribution you not only have to solve Bayes formula, but also invert it, so that’s even harder.</p>
+<p>Then we might say “Well, instead let’s construct an ergodic, reversible Markov chain that has as an equilibrium distribution which matches our posterior distribution”. I’m just kidding, most people wouldn’t say that as it sounds bat-shit crazy. If you can’t compute it, can’t sample from it, then constructing that Markov chain with all these properties must be even harder.</p>
+<p>The surprising insight though is that this is actually very easy and there exist a general class of algorithms that do this called <a href="https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo"><strong>Markov chain Monte Carlo</strong></a> (constructing a Markov chain to do Monte Carlo approximation).</p>
+</section>
+<section id="setting-up-the-problem" class="level2">
+<h2 class="anchored" data-anchor-id="setting-up-the-problem">Setting up the problem</h2>
+<p>First, lets import our modules.</p>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>matplotlib inline</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy <span class="im">as</span> sp</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> norm</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>sns.set_style(<span class="st">'white'</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>sns.set_context(<span class="st">'talk'</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">123</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Lets generate some data: 20 points from a normal centered around zero. Our goal will be to estimate the posterior of the mean <code>mu</code> (we’ll assume that we know the standard deviation to be 1).</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> np.random.randn(<span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> plt.subplot()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sns.distplot(data, kde<span class="op">=</span><span class="va">False</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.<span class="bu">set</span>(title<span class="op">=</span><span class="st">'Histogram of observed data'</span>, xlabel<span class="op">=</span><span class="st">'x'</span>, ylabel<span class="op">=</span><span class="st">'# observations'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-4-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Next, we have to define our model. In this simple case, we will assume that this data is normal distributed, i.e.&nbsp;the likelihood of the model is normal. As you know, a normal distribution has two parameters – mean <span class="math inline">\(\mu\)</span> and standard deviation <span class="math inline">\(\sigma\)</span>. For simplicity, we’ll assume we know that <span class="math inline">\(\sigma = 1\)</span> and we’ll want to infer the posterior for <span class="math inline">\(\mu\)</span>. For each parameter we want to infer, we have to chose a prior. For simplicity, lets also assume a Normal distribution as a prior for <span class="math inline">\(\mu\)</span>. Thus, in stats speak our model is:</p>
+<p><span class="math display">\[\mu \sim \text{Normal}(0, 1)\\
+x|\mu \sim \text{Normal}(x; \mu, 1)\]</span></p>
+<p>What is convenient, is that for this model, we actually can compute the posterior analytically. That’s because for a normal likelihood with known standard deviation, the normal prior for <code>mu</code> is <a href="https://en.wikipedia.org/wiki/Conjugate_prior"><strong>conjugate</strong></a> (conjugate here means that our posterior will follow the same distribution as the prior), so we know that our posterior for <span class="math inline">\(\mu\)</span> is also normal. We can easily look up on wikipedia how we can compute the parameters of the posterior. For a mathemtical derivation of this, see <a href="https://docs.google.com/viewer?a=v&amp;pid=sites&amp;srcid=ZGVmYXVsdGRvbWFpbnxiYXllc2VjdHxneDplNGY0MDljNDA5MGYxYTM">here</a>.</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calc_posterior_analytical(data, x, mu_0, sigma_0):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    sigma <span class="op">=</span> <span class="fl">1.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(data)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    mu_post <span class="op">=</span> (mu_0 <span class="op">/</span> sigma_0<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> data.<span class="bu">sum</span>() <span class="op">/</span> sigma<span class="op">**</span><span class="dv">2</span>) <span class="op">/</span> (<span class="fl">1.</span> <span class="op">/</span> sigma_0<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> n <span class="op">/</span> sigma<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    sigma_post <span class="op">=</span> (<span class="fl">1.</span> <span class="op">/</span> sigma_0<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> n <span class="op">/</span> sigma<span class="op">**</span><span class="dv">2</span>)<span class="op">**-</span><span class="dv">1</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> norm(mu_post, np.sqrt(sigma_post)).pdf(x)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> plt.subplot()</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">500</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>posterior_analytical <span class="op">=</span> calc_posterior_analytical(data, x, <span class="fl">0.</span>, <span class="fl">1.</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>ax.plot(x, posterior_analytical)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">'mu'</span>, ylabel<span class="op">=</span><span class="st">'belief'</span>, title<span class="op">=</span><span class="st">'Analytical posterior'</span>)<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>sns.despine()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-5-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>This shows our quantity of interest, the probability of <span class="math inline">\(\mu\)</span>’s values after having seen the data, taking our prior information into account. Lets assume, however, that our prior wasn’t conjugate and we couldn’t solve this by hand which is usually the case.</p>
+</section>
+<section id="explaining-mcmc-sampling-with-code" class="level2">
+<h2 class="anchored" data-anchor-id="explaining-mcmc-sampling-with-code">Explaining MCMC sampling with code</h2>
+<p>Now on to the sampling logic. At first, you find starting parameter position (can be randomly chosen), lets fix it arbitrarily to:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mu_current <span class="op">=</span> <span class="fl">1.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Then, you propose to move (jump) from that position somewhere else (that’s the Markov part). You can be very dumb or very sophisticated about how you come up with that proposal. The Metropolis sampler is very dumb and just takes a sample from a normal distribution (no relationship to the normal we assume for the model) centered around your current <code>mu</code> value (i.e.&nbsp;<code>mu_current</code>) with a certain standard deviation (<code>proposal_width</code>) that will determine how far you propose jumps (here we’re use <code>scipy.stats.norm</code>):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>proposal <span class="op">=</span> norm(mu_current, proposal_width).rvs()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Next, you evaluate whether that’s a good place to jump to or not. If the resulting normal distribution with that proposed <code>mu</code> explaines the data better than your old <code>mu</code>, you’ll definitely want to go there. What does “explains the data better” mean? We quantify fit by computing the probability of the data, given the likelihood (normal) with the proposed parameter values (proposed <code>mu</code> and a fixed <code>sigma = 1</code>). This can easily be computed by calculating the probability for each data point using <code>scipy.stats.normal(mu, sigma).pdf(data)</code> and then multiplying the individual probabilities, i.e.&nbsp;compute the likelihood (usually you would use log probabilities but we omit this here):</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>likelihood_current <span class="op">=</span> norm(mu_current, <span class="dv">1</span>).pdf(data).prod()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>likelihood_proposal <span class="op">=</span> norm(mu_proposal, <span class="dv">1</span>).pdf(data).prod()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute prior probability of current and proposed mu        </span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>prior_current <span class="op">=</span> norm(mu_prior_mu, mu_prior_sd).pdf(mu_current)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>prior_proposal <span class="op">=</span> norm(mu_prior_mu, mu_prior_sd).pdf(mu_proposal)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Nominator of Bayes formula</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>p_current <span class="op">=</span> likelihood_current <span class="op">*</span> prior_current</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>p_proposal <span class="op">=</span> likelihood_proposal <span class="op">*</span> prior_proposal</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Up until now, we essentially have a hill-climbing algorithm that would just propose movements into random directions and only accept a jump if the <code>mu_proposal</code> has higher likelihood than <code>mu_current</code>. Eventually we’ll get to <code>mu = 0</code> (or close to it) from where no more moves will be possible. However, we want to get a posterior so we’ll also have to sometimes accept moves into the other direction. The key trick is by dividing the two probabilities,</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>p_accept <span class="op">=</span> p_proposal <span class="op">/</span> p_current</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>we get an acceptance probability. You can already see that if <code>p_proposal</code> is larger, that probability will be <code>&gt; 1</code> and we’ll definitely accept. However, if <code>p_current</code> is larger, say twice as large, there’ll be a 50% chance of moving there:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>accept <span class="op">=</span> np.random.rand() <span class="op">&lt;</span> p_accept</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> accept:</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Update position</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    cur_pos <span class="op">=</span> proposal</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This simple procedure gives us samples from the posterior.</p>
+<section id="why-does-this-make-sense" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-this-make-sense">Why does this make sense?</h3>
+<p>Taking a step back, note that the above acceptance ratio is the reason this whole thing works out and we get around the integration. We can show this by computing the acceptance ratio over the normalized posterior and seeing how it’s equivalent to the acceptance ratio of the unnormalized posterior (lets say <span class="math inline">\(\mu_0\)</span> is our current position, and <span class="math inline">\(\mu\)</span> is our proposal):</p>
+<p><span class="math display">\[ \frac{\frac{P(x|\mu) P(\mu)}{P(x)}}{\frac{P(x|\mu_0) P(\mu_0)}{P(x)}} = \frac{P(x|\mu) P(\mu)}{P(x|\mu_0) P(\mu_0)}\]</span></p>
+<p>In words, dividing the posterior of proposed parameter setting by the posterior of the current parameter setting, <span class="math inline">\(P(x)\)</span> – that nasty quantity we can’t compute – gets canceled out. So you can intuit that we’re actually dividing the full posterior at one position by the full posterior at another position (no magic here). That way, we are visiting regions of high posterior probability <em>relatively</em> more often than those of low posterior probability.</p>
+</section>
+<section id="putting-it-all-together" class="level3">
+<h3 class="anchored" data-anchor-id="putting-it-all-together">Putting it all together</h3>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sampler(data, samples<span class="op">=</span><span class="dv">4</span>, mu_init<span class="op">=</span><span class="fl">.5</span>, proposal_width<span class="op">=</span><span class="fl">.5</span>, plot<span class="op">=</span><span class="va">False</span>, mu_prior_mu<span class="op">=</span><span class="dv">0</span>, mu_prior_sd<span class="op">=</span><span class="fl">1.</span>):</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    mu_current <span class="op">=</span> mu_init</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    posterior <span class="op">=</span> [mu_current]</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(samples):</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="co"># suggest new position</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        mu_proposal <span class="op">=</span> norm(mu_current, proposal_width).rvs()</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Compute likelihood by multiplying probabilities of each data point</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        likelihood_current <span class="op">=</span> norm(mu_current, <span class="dv">1</span>).pdf(data).prod()</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        likelihood_proposal <span class="op">=</span> norm(mu_proposal, <span class="dv">1</span>).pdf(data).prod()</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Compute prior probability of current and proposed mu        </span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        prior_current <span class="op">=</span> norm(mu_prior_mu, mu_prior_sd).pdf(mu_current)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        prior_proposal <span class="op">=</span> norm(mu_prior_mu, mu_prior_sd).pdf(mu_proposal)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        p_current <span class="op">=</span> likelihood_current <span class="op">*</span> prior_current</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        p_proposal <span class="op">=</span> likelihood_proposal <span class="op">*</span> prior_proposal</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Accept proposal?</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>        p_accept <span class="op">=</span> p_proposal <span class="op">/</span> p_current</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Usually would include prior probability, which we neglect here for simplicity</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>        accept <span class="op">=</span> np.random.rand() <span class="op">&lt;</span> p_accept</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> plot:</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>            plot_proposal(mu_current, mu_proposal, mu_prior_mu, mu_prior_sd, data, accept, posterior, i)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> accept:</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Update position</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>            mu_current <span class="op">=</span> mu_proposal</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>        posterior.append(mu_current)</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.array(posterior)</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to display</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_proposal(mu_current, mu_proposal, mu_prior_mu, mu_prior_sd, data, accepted, trace, i):</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> copy <span class="im">import</span> copy</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    trace <span class="op">=</span> copy(trace)</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    fig, (ax1, ax2, ax3, ax4) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">16</span>, <span class="dv">4</span>))</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>    fig.suptitle(<span class="st">'Iteration </span><span class="sc">%i</span><span class="st">'</span> <span class="op">%</span> (i <span class="op">+</span> <span class="dv">1</span>))</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">5000</span>)</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    color <span class="op">=</span> <span class="st">'g'</span> <span class="cf">if</span> accepted <span class="cf">else</span> <span class="st">'r'</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Plot prior</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    prior_current <span class="op">=</span> norm(mu_prior_mu, mu_prior_sd).pdf(mu_current)</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    prior_proposal <span class="op">=</span> norm(mu_prior_mu, mu_prior_sd).pdf(mu_proposal)</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>    prior <span class="op">=</span> norm(mu_prior_mu, mu_prior_sd).pdf(x)</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>    ax1.plot(x, prior)</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    ax1.plot([mu_current] <span class="op">*</span> <span class="dv">2</span>, [<span class="dv">0</span>, prior_current], marker<span class="op">=</span><span class="st">'o'</span>, color<span class="op">=</span><span class="st">'b'</span>)</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>    ax1.plot([mu_proposal] <span class="op">*</span> <span class="dv">2</span>, [<span class="dv">0</span>, prior_proposal], marker<span class="op">=</span><span class="st">'o'</span>, color<span class="op">=</span>color)</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>    ax1.annotate(<span class="st">""</span>, xy<span class="op">=</span>(mu_proposal, <span class="fl">0.2</span>), xytext<span class="op">=</span>(mu_current, <span class="fl">0.2</span>),</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>                 arrowprops<span class="op">=</span><span class="bu">dict</span>(arrowstyle<span class="op">=</span><span class="st">"-&gt;"</span>, lw<span class="op">=</span><span class="fl">2.</span>))</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>    ax1.<span class="bu">set</span>(ylabel<span class="op">=</span><span class="st">'Probability Density'</span>, title<span class="op">=</span><span class="st">'current: prior(mu=</span><span class="sc">%.2f</span><span class="st">) = </span><span class="sc">%.2f</span><span class="ch">\n</span><span class="st">proposal: prior(mu=</span><span class="sc">%.2f</span><span class="st">) = </span><span class="sc">%.2f</span><span class="st">'</span> <span class="op">%</span> (mu_current, prior_current, mu_proposal, prior_proposal))</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Likelihood</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>    likelihood_current <span class="op">=</span> norm(mu_current, <span class="dv">1</span>).pdf(data).prod()</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>    likelihood_proposal <span class="op">=</span> norm(mu_proposal, <span class="dv">1</span>).pdf(data).prod()</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> norm(loc<span class="op">=</span>mu_proposal, scale<span class="op">=</span><span class="dv">1</span>).pdf(x)</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>    sns.distplot(data, kde<span class="op">=</span><span class="va">False</span>, norm_hist<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax2)</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>    ax2.plot(x, y, color<span class="op">=</span>color)</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>    ax2.axvline(mu_current, color<span class="op">=</span><span class="st">'b'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, label<span class="op">=</span><span class="st">'mu_current'</span>)</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    ax2.axvline(mu_proposal, color<span class="op">=</span>color, linestyle<span class="op">=</span><span class="st">'--'</span>, label<span class="op">=</span><span class="st">'mu_proposal'</span>)</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>    <span class="co">#ax2.title('Proposal {}'.format('accepted' if accepted else 'rejected'))</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>    ax2.annotate(<span class="st">""</span>, xy<span class="op">=</span>(mu_proposal, <span class="fl">0.2</span>), xytext<span class="op">=</span>(mu_current, <span class="fl">0.2</span>),</span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>                 arrowprops<span class="op">=</span><span class="bu">dict</span>(arrowstyle<span class="op">=</span><span class="st">"-&gt;"</span>, lw<span class="op">=</span><span class="fl">2.</span>))</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>    ax2.<span class="bu">set</span>(title<span class="op">=</span><span class="st">'likelihood(mu=</span><span class="sc">%.2f</span><span class="st">) = </span><span class="sc">%.2f</span><span class="ch">\n</span><span class="st">likelihood(mu=</span><span class="sc">%.2f</span><span class="st">) = </span><span class="sc">%.2f</span><span class="st">'</span> <span class="op">%</span> (mu_current, <span class="fl">1e14</span><span class="op">*</span>likelihood_current, mu_proposal, <span class="fl">1e14</span><span class="op">*</span>likelihood_proposal))</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Posterior</span></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>    posterior_analytical <span class="op">=</span> calc_posterior_analytical(data, x, mu_prior_mu, mu_prior_sd)</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    ax3.plot(x, posterior_analytical)</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>    posterior_current <span class="op">=</span> calc_posterior_analytical(data, mu_current, mu_prior_mu, mu_prior_sd)</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>    posterior_proposal <span class="op">=</span> calc_posterior_analytical(data, mu_proposal, mu_prior_mu, mu_prior_sd)</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>    ax3.plot([mu_current] <span class="op">*</span> <span class="dv">2</span>, [<span class="dv">0</span>, posterior_current], marker<span class="op">=</span><span class="st">'o'</span>, color<span class="op">=</span><span class="st">'b'</span>)</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>    ax3.plot([mu_proposal] <span class="op">*</span> <span class="dv">2</span>, [<span class="dv">0</span>, posterior_proposal], marker<span class="op">=</span><span class="st">'o'</span>, color<span class="op">=</span>color)</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>    ax3.annotate(<span class="st">""</span>, xy<span class="op">=</span>(mu_proposal, <span class="fl">0.2</span>), xytext<span class="op">=</span>(mu_current, <span class="fl">0.2</span>),</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>                 arrowprops<span class="op">=</span><span class="bu">dict</span>(arrowstyle<span class="op">=</span><span class="st">"-&gt;"</span>, lw<span class="op">=</span><span class="fl">2.</span>))</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>    <span class="co">#x3.set(title=r'prior x likelihood $\propto$ posterior')</span></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>    ax3.<span class="bu">set</span>(title<span class="op">=</span><span class="st">'posterior(mu=</span><span class="sc">%.2f</span><span class="st">) = </span><span class="sc">%.5f</span><span class="ch">\n</span><span class="st">posterior(mu=</span><span class="sc">%.2f</span><span class="st">) = </span><span class="sc">%.5f</span><span class="st">'</span> <span class="op">%</span> (mu_current, posterior_current, mu_proposal, posterior_proposal))</span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> accepted:</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>        trace.append(mu_proposal)</span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>        trace.append(mu_current)</span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>    ax4.plot(trace)</span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>    ax4.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">'iteration'</span>, ylabel<span class="op">=</span><span class="st">'mu'</span>, title<span class="op">=</span><span class="st">'trace'</span>)</span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>    <span class="co">#plt.legend()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="visualizing-mcmc" class="level2">
+<h2 class="anchored" data-anchor-id="visualizing-mcmc">Visualizing MCMC</h2>
+<p>To visualize the sampling, we’ll create plots for some quantities that are computed. Each row below is a single iteration through our Metropolis sampler.</p>
+<p>The first columns is our prior distribution – what our belief about <span class="math inline">\(\mu\)</span> is before seeing the data. You can see how the distribution is static and we only plug in our <span class="math inline">\(\mu\)</span> proposals. The vertical lines represent our current <span class="math inline">\(\mu\)</span> in blue and our proposed <span class="math inline">\(\mu\)</span> in either red or green (rejected or accepted, respectively).</p>
+<p>The 2nd column is our likelihood and what we are using to evaluate how good our model explains the data. You can see that the likelihood function changes in response to the proposed <span class="math inline">\(\mu\)</span>. The blue histogram which is our data. The solid line in green or red is the likelihood with the currently proposed <code>mu</code>. Intuitively, the more overlap there is between likelihood and data, the better the model explains the data and the higher the resulting probability will be. The dotted line of the same color is the proposed <code>mu</code> and the dotted blue line is the current <code>mu</code>.</p>
+<p>The 3rd column is our posterior distribution. Here I am displaying the normalized posterior but as we found out above, we can just multiply the prior value for the current and proposed <span class="math inline">\(\mu\)</span>’s by the likelihood value for the two <span class="math inline">\(\mu\)</span>’s to get the unnormalized posterior values (which we use for the actual computation), and divide one by the other to get our acceptance probability.</p>
+<p>The 4th column is our trace (i.e.&nbsp;the posterior samples of <span class="math inline">\(\mu\)</span> we’re generating) where we store each sample irrespective of whether it was accepted or rejected (in which case the line just stays constant).</p>
+<p>Note that we always move to relatively more likely <span class="math inline">\(\mu\)</span> values (in terms of their posterior density), but only sometimes to relatively less likely <span class="math inline">\(\mu\)</span> values, as can be seen in iteration 14 (the iteration number can be found at the top center of each row).</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">123</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>sampler(data, samples<span class="op">=</span><span class="dv">8</span>, mu_init<span class="op">=-</span><span class="fl">1.</span>, plot<span class="op">=</span><span class="va">True</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-3.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-4.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-5.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-6.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-7.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-7-output-8.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Now the magic of MCMC is that you just have to do that for a long time, and the samples that are generated in this way come from the posterior distribution of your model. There is a rigorous mathematical proof that guarantees this which I won’t go into detail here.</p>
+<p>To get a sense of what this produces, lets draw a lot of samples and plot them.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>posterior <span class="op">=</span> sampler(data, samples<span class="op">=</span><span class="dv">15000</span>, mu_init<span class="op">=</span><span class="fl">1.</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>ax.plot(posterior)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">'sample'</span>, ylabel<span class="op">=</span><span class="st">'mu'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>This is usually called the trace. To now get an approximation of the posterior (the reason why we’re doing all this), we simply take the histogram of this trace. It’s important to keep in mind that although this looks similar to the data we sampled above to fit the model, the two are completely separate. The below plot represents our <strong>belief</strong> in <code>mu</code>. In this case it just happens to also be normal but for a different model, it could have a completely different shape than the likelihood or prior.</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> plt.subplot()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>sns.distplot(posterior[<span class="dv">500</span>:], ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">'estimated posterior'</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">.5</span>, <span class="fl">.5</span>, <span class="dv">500</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>post <span class="op">=</span> calc_posterior_analytical(data, x, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>ax.plot(x, post, <span class="st">'g'</span>, label<span class="op">=</span><span class="st">'analytic posterior'</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">'mu'</span>, ylabel<span class="op">=</span><span class="st">'belief'</span>)<span class="op">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>As you can see, by following the above procedure, we get samples from the same distribution as what we derived analytically.</p>
+</section>
+<section id="proposal-width" class="level2">
+<h2 class="anchored" data-anchor-id="proposal-width">Proposal width</h2>
+<p>Above we set the proposal width to <code>0.5</code>. That turned out to be a pretty good value. In general you don’t want the width to be too narrow because your sampling will be inefficient as it takes a long time to explore the whole parameter space and shows the typical random-walk behavior:</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>posterior_small <span class="op">=</span> sampler(data, samples<span class="op">=</span><span class="dv">5000</span>, mu_init<span class="op">=</span><span class="fl">1.</span>, proposal_width<span class="op">=</span><span class="fl">.01</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>ax.plot(posterior_small)<span class="op">;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">'sample'</span>, ylabel<span class="op">=</span><span class="st">'mu'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-10-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>But you also don’t want it to be so large that you never accept a jump:</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>posterior_large <span class="op">=</span> sampler(data, samples<span class="op">=</span><span class="dv">5000</span>, mu_init<span class="op">=</span><span class="fl">1.</span>, proposal_width<span class="op">=</span><span class="fl">3.</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>ax.plot(posterior_large)<span class="op">;</span> plt.xlabel(<span class="st">'sample'</span>)<span class="op">;</span> plt.ylabel(<span class="st">'mu'</span>)<span class="op">;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">'sample'</span>, ylabel<span class="op">=</span><span class="st">'mu'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-11-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Note, however, that we are still sampling from our target posterior distribution here as guaranteed by the mathematical proof, just less efficiently:</p>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>sns.distplot(posterior_small[<span class="dv">1000</span>:], label<span class="op">=</span><span class="st">'Small step size'</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>sns.distplot(posterior_large[<span class="dv">1000</span>:], label<span class="op">=</span><span class="st">'Large step size'</span>)<span class="op">;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> plt.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-12-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>With more samples this will eventually look like the true posterior. The key is that we want our samples to be independent of each other which cleary isn’t the case here. Thus, one common metric to evaluate the efficiency of our sampler is the autocorrelation – i.e.&nbsp;how correlated a sample <code>i</code> is to sample <code>i-1</code>, <code>i-2</code>, etc:</p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc3.stats <span class="im">import</span> autocorr</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>lags <span class="op">=</span> np.arange(<span class="dv">1</span>, <span class="dv">100</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>ax.plot(lags, [autocorr(posterior_large, l) <span class="cf">for</span> l <span class="kw">in</span> lags], label<span class="op">=</span><span class="st">'large step size'</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>ax.plot(lags, [autocorr(posterior_small, l) <span class="cf">for</span> l <span class="kw">in</span> lags], label<span class="op">=</span><span class="st">'small step size'</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>ax.plot(lags, [autocorr(posterior, l) <span class="cf">for</span> l <span class="kw">in</span> lags], label<span class="op">=</span><span class="st">'medium step size'</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">'lag'</span>, ylabel<span class="op">=</span><span class="st">'autocorrelation'</span>, ylim<span class="op">=</span>(<span class="op">-</span><span class="fl">.1</span>, <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-13-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Obviously we want to have a smart way of figuring out the right step width automatically. One common method is to keep adjusting the proposal width so that roughly 50% proposals are rejected.</p>
+</section>
+<section id="extending-to-more-complex-models" class="level2">
+<h2 class="anchored" data-anchor-id="extending-to-more-complex-models">Extending to more complex models</h2>
+<p>Now you can easily imagine that we could also add a <code>sigma</code> parameter for the standard-deviation and follow the same procedure for this second parameter. In that case, we would be generating proposals for <code>mu</code> <em>and</em> <code>sigma</code> but the algorithm logic would be nearly identical. Or, we could have data from a very different distribution like a Binomial and still use the same algorithm and get the correct posterior. That’s pretty cool and a huge benefit of probabilistic programming: Just define the model you want and let MCMC take care of the inference.</p>
+<p>For example, the below model can be written in <code>PyMC3</code> quite easily. Below we also use the Metropolis sampler (which automatically tunes the proposal width) and see that we get identical results. Feel free to play around with this and change the distributions. For more information, as well as more complex examples, see the <a href="http://pymc-devs.github.io/pymc3/getting_started/">PyMC3 documentation</a>.</p>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymc3 <span class="im">as</span> pm</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pm.Model():</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> pm.Normal(<span class="st">'mu'</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    sigma <span class="op">=</span> <span class="fl">1.</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    returns <span class="op">=</span> pm.Normal(<span class="st">'returns'</span>, mu<span class="op">=</span>mu, sd<span class="op">=</span>sigma, observed<span class="op">=</span>data)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    step <span class="op">=</span> pm.Metropolis()</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    trace <span class="op">=</span> pm.sample(<span class="dv">15000</span>, step)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>sns.distplot(trace[<span class="dv">2000</span>:][<span class="st">'mu'</span>], label<span class="op">=</span><span class="st">'PyMC3 sampler'</span>)<span class="op">;</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>sns.distplot(posterior[<span class="dv">500</span>:], label<span class="op">=</span><span class="st">'Hand-written sampler'</span>)<span class="op">;</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>plt.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [-----------------100%-----------------] 15000 of 15000 complete in 1.7 sec</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="MCMC-sampling-for-dummies_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="conclusions" class="level2">
+<h2 class="anchored" data-anchor-id="conclusions">Conclusions</h2>
+<p>We glossed over a lot of detail which is certainly important but there are many other posts that deal with that. Here, we really wanted to communicate the idea of MCMC and the Metropolis sampler. Hopefully you will have gathered some intuition which will equip you to read one of the more technical introductions to this topic.</p>
+<p>Other, more fancy, MCMC algorithms like Hamiltonian Monte Carlo actually work very similar to this, they are just much more clever in proposing where to jump next.</p>
+<p>This blog post was written in a Jupyter Notebook, you can find the underlying NB with all its code <a href="https://github.com/twiecki/WhileMyMCMCGentlySamples/blob/master/content/downloads/notebooks/MCMC-sampling-for-dummies.ipynb">here</a>.</p>
+</section>
+<section id="support-me-on-patreon" class="level2">
+<h2 class="anchored" data-anchor-id="support-me-on-patreon">Support me on Patreon</h2>
+<p>Finally, if you enjoyed this blog post, consider <a href="https://www.patreon.com/twiecki">supporting me on Patreon</a> which allows me to devote more time to writing new blog posts.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  let localAlternateSentinel = 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left"><i class="fa-solid fa-copyright" aria-label="copyright"></i> 2022, Thomas Wiecki</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item">
+ <code><span style="color: #c1fdff">while</span>&nbsp;<span style="color: #ffe94e">my_mcmc:</span><br>&nbsp;&nbsp;gently(samples)</code>
+  </li>  
+</ul>
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/twiecki">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/twiecki">
+      <i class="bi bi-twitter" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/thomas-wiecki-46339244/">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>
