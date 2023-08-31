@@ -1,21 +1,5 @@
 [
   {
-    "listing": "/index.html",
-    "items": [
-      "/blog/2021-02-23-saving-the-world.html",
-      "/blog/random_walk_deep_net.html",
-      "/blog/supply_chain - Copy.html",
-      "/blog/supply_chain.html",
-      "/blog/copulas - Copy.html",
-      "/blog/copulas.html",
-      "/blog/MCMC-sampling-for-dummies - Copy.html",
-      "/blog/MCMC-sampling-for-dummies.html",
-      "/blog/GLM_hierarchical - Copy.html",
-      "/blog/GLM_hierarchical.html",
-      "/blog/new_in_pymc3_3.1.html"
-    ]
-  },
-  {
     "listing": "/blog.html",
     "items": [
       "/blog/2021-02-23-saving-the-world.html",
@@ -24,8 +8,24 @@
       "/blog/supply_chain.html",
       "/blog/copulas - Copy.html",
       "/blog/copulas.html",
-      "/blog/MCMC-sampling-for-dummies - Copy.html",
       "/blog/MCMC-sampling-for-dummies.html",
+      "/blog/MCMC-sampling-for-dummies - Copy.html",
+      "/blog/GLM_hierarchical - Copy.html",
+      "/blog/GLM_hierarchical.html",
+      "/blog/new_in_pymc3_3.1.html"
+    ]
+  },
+  {
+    "listing": "/index.html",
+    "items": [
+      "/blog/2021-02-23-saving-the-world.html",
+      "/blog/random_walk_deep_net.html",
+      "/blog/supply_chain - Copy.html",
+      "/blog/supply_chain.html",
+      "/blog/copulas - Copy.html",
+      "/blog/copulas.html",
+      "/blog/MCMC-sampling-for-dummies.html",
+      "/blog/MCMC-sampling-for-dummies - Copy.html",
       "/blog/GLM_hierarchical - Copy.html",
       "/blog/GLM_hierarchical.html",
       "/blog/new_in_pymc3_3.1.html"

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://website-test.com/blog.html</loc>
+    <lastmod>2023-08-31T17:38:54.035Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/GLM_hierarchical.html</loc>
+    <lastmod>2023-08-31T17:38:51.555Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/copulas.html</loc>
+    <lastmod>2023-08-31T17:38:49.451Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/supply_chain.html</loc>
+    <lastmod>2023-08-31T17:38:47.767Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/new_in_pymc3_3.1.html</loc>
+    <lastmod>2023-08-31T17:38:45.455Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/MCMC-sampling-for-dummies.html</loc>
+    <lastmod>2023-08-31T17:38:43.527Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/index.html</loc>
+    <lastmod>2023-08-31T17:38:39.810Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/2021-02-23-saving-the-world.html</loc>
+    <lastmod>2023-08-31T17:38:42.319Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/supply_chain - Copy.html</loc>
+    <lastmod>2023-08-31T17:38:44.651Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/MCMC-sampling-for-dummies - Copy.html</loc>
+    <lastmod>2023-08-31T17:38:46.611Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/copulas - Copy.html</loc>
+    <lastmod>2023-08-31T17:38:48.631Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/GLM_hierarchical - Copy.html</loc>
+    <lastmod>2023-08-31T17:38:50.479Z</lastmod>
+  </url>
+  <url>
+    <loc>https://website-test.com/blog/random_walk_deep_net.html</loc>
+    <lastmod>2023-08-31T17:38:53.071Z</lastmod>
+  </url>
+</urlset>
